@@ -161,226 +161,251 @@ class _OSShellState extends State<OSShell> with SingleTickerProviderStateMixin {
                       // Spacer before notch
                       Expanded(child: SizedBox()),
                       // Center: Dynamic Island (Notch) - overlay expansion
-                      Stack(
-                        alignment: Alignment.topCenter,
-                        children: [
-                          GestureDetector(
-                            onTap: _toggleNotch,
-                            child: AnimatedBuilder(
-                              animation: _notchController,
-                              builder: (context, child) {
-                                double minHeight = 24;
-                                double notifHeight = 48;
-                                double maxHeight = 220;
-                                double minWidth = 120;
-                                double maxWidth = MediaQuery.of(context).size.width / 6;
+                      GestureDetector(
+                        onTap: _toggleNotch,
+                        child: AnimatedBuilder(
+                          animation: _notchController,
+                          builder: (context, child) {
+                            double minHeight = 24;
+                            double maxHeight = 220;
+                            double minWidth = 120;
+                            double maxWidth =
+                                MediaQuery.of(context).size.width / 6;
 
-                                double notchHeight = minHeight;
-                                double notchWidth = minWidth;
+                            double notchHeight = minHeight;
+                            double notchWidth = minWidth;
 
-                                if (_notchFullyExpanded) {
-                                  notchHeight = minHeight +
-                                      (_notchController.value * (maxHeight - minHeight));
-                                  notchWidth = maxWidth;
-                                } else if (_notchExpanded) {
-                                  notchHeight = notifHeight;
-                                  notchWidth = minWidth +
-                                      (_notchController.value * (maxWidth - minWidth));
-                                }
+                            // Only expand vertically for full expansion (user click)
+                            if (_notchFullyExpanded) {
+                              notchHeight =
+                                  minHeight +
+                                  (_notchController.value *
+                                      (maxHeight - minHeight));
+                              notchWidth = maxWidth;
+                            } else if (_notchExpanded) {
+                              notchHeight = minHeight;
+                              notchWidth =
+                                  minWidth +
+                                  (_notchController.value *
+                                      (maxWidth - minWidth));
+                            }
 
-                                return Material(
-                                  color: Colors.transparent,
-                                  child: Container(
-                                    width: notchWidth,
-                                    height: notchHeight,
-                                    decoration: BoxDecoration(
-                                      color: Colors.black,
-                                      borderRadius: BorderRadius.circular(16),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.black.withOpacity(0.3),
-                                          blurRadius: 8,
-                                          offset: Offset(0, 2),
-                                        ),
-                                      ],
+                            return Material(
+                              color: Colors.transparent,
+                              child: Container(
+                                width: notchWidth,
+                                height: notchHeight,
+                                decoration: BoxDecoration(
+                                  color: Colors.black,
+                                  borderRadius: BorderRadius.circular(16),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.3),
+                                      blurRadius: 8,
+                                      offset: Offset(0, 2),
                                     ),
-                                    child: Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                        vertical: 16.0,
-                                        horizontal: 12.0,
+                                  ],
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 8.0,
+                                    horizontal: 12.0,
+                                  ),
+                                  child: Stack(
+                                    alignment: Alignment.center,
+                                    children: [
+                                      // Always show time and dots in the notch
+                                      Positioned(
+                                        left: 0,
+                                        top: 0,
+                                        bottom: 0,
+                                        child: Align(
+                                          alignment: Alignment.centerLeft,
+                                          child: Text(
+                                            _time,
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ),
                                       ),
-                                      child: _notchFullyExpanded
-                                          ? Column(
-                                              mainAxisAlignment: MainAxisAlignment.start,
-                                              crossAxisAlignment: CrossAxisAlignment.center,
-                                              children: [
-                                                if (_notification.isNotEmpty) ...[
-                                                  Text(
-                                                    "Details",
-                                                    style: TextStyle(
-                                                      color: Colors.white,
-                                                      fontWeight: FontWeight.bold,
-                                                      fontSize: 18,
+                                      Positioned(
+                                        right: 0,
+                                        top: 0,
+                                        bottom: 0,
+                                        child: Align(
+                                          alignment: Alignment.centerRight,
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Container(
+                                                width: 8,
+                                                height: 8,
+                                                decoration: BoxDecoration(
+                                                  color: Colors.green,
+                                                  shape: BoxShape.circle,
+                                                ),
+                                              ),
+                                              SizedBox(width: 4),
+                                              Container(
+                                                width: 8,
+                                                height: 8,
+                                                decoration: BoxDecoration(
+                                                  color: Colors.yellow,
+                                                  shape: BoxShape.circle,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                      // Notification or full expansion content in center
+                                      if (_notchFullyExpanded)
+                                        Column(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            if (_notification.isNotEmpty) ...[
+                                              Text(
+                                                "Details",
+                                                style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 18,
+                                                ),
+                                              ),
+                                              SizedBox(height: 8),
+                                              Text(
+                                                _notification,
+                                                style: TextStyle(
+                                                  color: Colors.white70,
+                                                  fontSize: 15,
+                                                ),
+                                                textAlign: TextAlign.center,
+                                              ),
+                                              SizedBox(height: 16),
+                                            ] else ...[
+                                              Text(
+                                                _time,
+                                                style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 32,
+                                                ),
+                                              ),
+                                              SizedBox(height: 8),
+                                              Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.center,
+                                                children: [
+                                                  Container(
+                                                    width: 12,
+                                                    height: 12,
+                                                    decoration: BoxDecoration(
+                                                      color: Colors.green,
+                                                      shape: BoxShape.circle,
                                                     ),
                                                   ),
-                                                  SizedBox(height: 8),
-                                                  Text(
-                                                    _notification,
-                                                    style: TextStyle(
-                                                      color: Colors.white70,
-                                                      fontSize: 15,
+                                                  SizedBox(width: 6),
+                                                  Container(
+                                                    width: 12,
+                                                    height: 12,
+                                                    decoration: BoxDecoration(
+                                                      color: Colors.yellow,
+                                                      shape: BoxShape.circle,
                                                     ),
-                                                    textAlign: TextAlign.center,
-                                                  ),
-                                                  SizedBox(height: 16),
-                                                ] else ...[
-                                                  Text(
-                                                    _time,
-                                                    style: TextStyle(
-                                                      color: Colors.white,
-                                                      fontWeight: FontWeight.bold,
-                                                      fontSize: 32,
-                                                    ),
-                                                  ),
-                                                  SizedBox(height: 8),
-                                                  Row(
-                                                    mainAxisAlignment: MainAxisAlignment.center,
-                                                    children: [
-                                                      Container(
-                                                        width: 12,
-                                                        height: 12,
-                                                        decoration: BoxDecoration(
-                                                          color: Colors.green,
-                                                          shape: BoxShape.circle,
-                                                        ),
-                                                      ),
-                                                      SizedBox(width: 6),
-                                                      Container(
-                                                        width: 12,
-                                                        height: 12,
-                                                        decoration: BoxDecoration(
-                                                          color: Colors.yellow,
-                                                          shape: BoxShape.circle,
-                                                        ),
-                                                      ),
-                                                    ],
                                                   ),
                                                 ],
-                                                SizedBox(height: 18),
-                                                ..._demoNotifications.map(
-                                                  (n) => Padding(
-                                                    padding: const EdgeInsets.symmetric(
+                                              ),
+                                            ],
+                                            SizedBox(height: 18),
+                                            ..._demoNotifications.map(
+                                              (n) => Padding(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
                                                       vertical: 2.0,
                                                     ),
-                                                    child: Text(
-                                                      n,
-                                                      style: TextStyle(
-                                                        color: Colors.white38,
-                                                        fontSize: 12,
-                                                      ),
-                                                      textAlign: TextAlign.center,
-                                                    ),
+                                                child: Text(
+                                                  n,
+                                                  style: TextStyle(
+                                                    color: Colors.white38,
+                                                    fontSize: 12,
                                                   ),
+                                                  textAlign: TextAlign.center,
                                                 ),
-                                              ],
-                                            )
-                                          : (_notchExpanded && _notification.isNotEmpty)
-                                              ? Center(
-                                                  child: Text(
-                                                    _notification,
-                                                    style: TextStyle(
-                                                      color: Colors.white,
-                                                      fontSize: 12,
-                                                      fontWeight: FontWeight.w400,
-                                                    ),
-                                                    textAlign: TextAlign.center,
-                                                  ),
-                                                )
-                                              : Stack(
-                                                  alignment: Alignment.center,
-                                                  children: [
-                                                    // Time on left
-                                                    Positioned(
-                                                      left: 16,
-                                                      top: 6,
-                                                      child: Text(
-                                                        _time,
-                                                        style: TextStyle(
-                                                          color: Colors.white,
-                                                          fontSize: 13,
-                                                          fontWeight: FontWeight.w500,
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    // Green and yellow dots on right
-                                                    Positioned(
-                                                      right: 16,
-                                                      top: 8,
-                                                      child: Row(
-                                                        children: [
-                                                          Container(
-                                                            width: 8,
-                                                            height: 8,
-                                                            decoration: BoxDecoration(
-                                                              color: Colors.green,
-                                                              shape: BoxShape.circle,
-                                                            ),
-                                                          ),
-                                                          SizedBox(width: 4),
-                                                          Container(
-                                                            width: 8,
-                                                            height: 8,
-                                                            decoration: BoxDecoration(
-                                                              color: Colors.yellow,
-                                                              shape: BoxShape.circle,
-                                                            ),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                    ),
+                                              ),
+                                            ),
+                                          ],
+                                        )
+                                      else if (_notchExpanded &&
+                                          _notification.isNotEmpty)
+                                        Center(
+                                          child: Text(
+                                            _notification,
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w400,
+                                            ),
+                                            textAlign: TextAlign.center,
+                                          ),
+                                        ),
+                                    ],
                                   ),
-                                );
-                              },
-                            ),
-                          ),
-                        ],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
                       ),
                       Expanded(child: SizedBox()),
-                      // Right: Battery, Wifi, Speaker icons with backgrounds
-                      Container(
-                        margin: EdgeInsets.only(right: 6, left: 6),
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 4,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.brown[300],
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(
+                      // Right: Battery, Wifi, Speaker icons with individual backgrounds
+                      Row(
+                        children: [
+                          Container(
+                            margin: EdgeInsets.symmetric(horizontal: 2),
+                            padding: EdgeInsets.all(2),
+                            decoration: BoxDecoration(
+                              color: Colors.green[50]?.withOpacity(0.15),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Icon(
                               Icons.battery_full,
                               color: Colors.green[900],
                               size: 16,
                             ),
-                            SizedBox(width: 6),
-                            Icon(
+                          ),
+                          SizedBox(width: 4),
+                          Container(
+                            margin: EdgeInsets.symmetric(horizontal: 2),
+                            padding: EdgeInsets.all(2),
+                            decoration: BoxDecoration(
+                              color: Colors.brown[50]?.withOpacity(0.15),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Icon(
                               Icons.wifi,
-                              color: Colors.yellow[700],
+                              color: Colors.yellow[800],
                               size: 16,
                             ),
-                            SizedBox(width: 6),
-                            Icon(
+                          ),
+                          SizedBox(width: 4),
+                          Container(
+                            margin: EdgeInsets.symmetric(horizontal: 2),
+                            padding: EdgeInsets.all(2),
+                            decoration: BoxDecoration(
+                              color: Colors.yellow[50]?.withOpacity(0.15),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Icon(
                               Icons.volume_up,
                               color: Colors.brown[900],
                               size: 16,
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
