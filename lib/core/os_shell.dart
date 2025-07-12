@@ -14,6 +14,7 @@ class _OSShellState extends State<OSShell> with SingleTickerProviderStateMixin {
   String _time = '';
   String _date = '';
   bool _notchExpanded = false;
+  bool _notchFullyExpanded = false;
   String _notification = '';
   late AnimationController _notchController;
   late Animation<double> _notchAnimation;
@@ -56,11 +57,24 @@ class _OSShellState extends State<OSShell> with SingleTickerProviderStateMixin {
 
   void _toggleNotch() {
     setState(() {
-      _notchExpanded = !_notchExpanded;
-      if (_notchExpanded) {
-        _notchController.forward();
-      } else {
+      if (_notchFullyExpanded) {
+        _notchFullyExpanded = false;
+        _notchExpanded = false;
         _notchController.reverse();
+      } else if (_notchExpanded) {
+        _notchFullyExpanded = true;
+        _notchController.animateTo(
+          1.0,
+          duration: Duration(milliseconds: 350),
+          curve: Curves.easeInOut,
+        );
+      } else {
+        _notchExpanded = true;
+        _notchController.animateTo(
+          0.5,
+          duration: Duration(milliseconds: 350),
+          curve: Curves.easeInOut,
+        );
       }
     });
   }
@@ -71,12 +85,14 @@ class _OSShellState extends State<OSShell> with SingleTickerProviderStateMixin {
       setState(() {
         _notification = (_demoNotifications..shuffle()).first;
         _notchExpanded = true;
+        _notchFullyExpanded = false;
       });
       _notchController.forward();
       await Future.delayed(Duration(seconds: 3));
       setState(() {
         _notification = '';
         _notchExpanded = false;
+        _notchFullyExpanded = false;
       });
       _notchController.reverse();
     }
@@ -148,10 +164,35 @@ class _OSShellState extends State<OSShell> with SingleTickerProviderStateMixin {
                         child: AnimatedBuilder(
                           animation: _notchController,
                           builder: (context, child) {
-                            double notchHeight =
-                                24 + (_notchAnimation.value * 48);
-                            double notchWidth =
-                                120 + (_notchAnimation.value * 80);
+                            // Smooth transition between three states
+                            double minHeight = 24;
+                            double notifHeight = 48;
+                            double maxHeight = 120;
+                            double minWidth = 120;
+                            double maxWidth =
+                                MediaQuery.of(context).size.width / 6;
+
+                            double notchHeight = minHeight;
+                            double notchWidth = minWidth;
+
+                            if (_notchFullyExpanded) {
+                              notchHeight = maxHeight;
+                              notchWidth = maxWidth;
+                            } else if (_notchExpanded) {
+                              notchHeight = notifHeight;
+                              notchWidth = maxWidth;
+                            }
+
+                            // Animate between states
+                            notchHeight =
+                                minHeight +
+                                (_notchController.value *
+                                    (maxHeight - minHeight));
+                            notchWidth =
+                                minWidth +
+                                (_notchController.value *
+                                    (maxWidth - minWidth));
+
                             return Container(
                               width: notchWidth,
                               height: notchHeight,
@@ -169,35 +210,9 @@ class _OSShellState extends State<OSShell> with SingleTickerProviderStateMixin {
                               child: Stack(
                                 alignment: Alignment.center,
                                 children: [
-                                  // Green and yellow dot in center
+                                  // Time on left
                                   Positioned(
-                                    top: notchHeight / 2 - 4,
-                                    left: notchWidth / 2 - 4,
-                                    child: Row(
-                                      children: [
-                                        Container(
-                                          width: 6,
-                                          height: 6,
-                                          decoration: BoxDecoration(
-                                            color: Colors.green,
-                                            shape: BoxShape.circle,
-                                          ),
-                                        ),
-                                        SizedBox(width: 2),
-                                        Container(
-                                          width: 6,
-                                          height: 6,
-                                          decoration: BoxDecoration(
-                                            color: Colors.yellow,
-                                            shape: BoxShape.circle,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  // Time and date on sides
-                                  Positioned(
-                                    left: 12,
+                                    left: 16,
                                     top: notchHeight / 2 - 8,
                                     child: Text(
                                       _time,
@@ -208,20 +223,35 @@ class _OSShellState extends State<OSShell> with SingleTickerProviderStateMixin {
                                       ),
                                     ),
                                   ),
+                                  // Green and yellow dots on right (replace date)
                                   Positioned(
-                                    right: 12,
-                                    top: notchHeight / 2 - 8,
-                                    child: Text(
-                                      _date,
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w500,
-                                      ),
+                                    right: 16,
+                                    top: notchHeight / 2 - 6,
+                                    child: Row(
+                                      children: [
+                                        Container(
+                                          width: 8,
+                                          height: 8,
+                                          decoration: BoxDecoration(
+                                            color: Colors.green,
+                                            shape: BoxShape.circle,
+                                          ),
+                                        ),
+                                        SizedBox(width: 4),
+                                        Container(
+                                          width: 8,
+                                          height: 8,
+                                          decoration: BoxDecoration(
+                                            color: Colors.yellow,
+                                            shape: BoxShape.circle,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
                                   // Notification text when expanded
                                   if (_notchExpanded &&
+                                      !_notchFullyExpanded &&
                                       _notification.isNotEmpty)
                                     Positioned(
                                       bottom: 8,
@@ -236,6 +266,94 @@ class _OSShellState extends State<OSShell> with SingleTickerProviderStateMixin {
                                             fontWeight: FontWeight.w400,
                                           ),
                                           textAlign: TextAlign.center,
+                                        ),
+                                      ),
+                                    ),
+                                  // Fully expanded state content (demo)
+                                  if (_notchFullyExpanded)
+                                    Positioned.fill(
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 16.0,
+                                          horizontal: 12.0,
+                                        ),
+                                        child: Column(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.start,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.center,
+                                          children: [
+                                            if (_notification.isNotEmpty) ...[
+                                              Text(
+                                                "Details",
+                                                style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 18,
+                                                ),
+                                              ),
+                                              SizedBox(height: 8),
+                                              Text(
+                                                _notification,
+                                                style: TextStyle(
+                                                  color: Colors.white70,
+                                                  fontSize: 15,
+                                                ),
+                                                textAlign: TextAlign.center,
+                                              ),
+                                              SizedBox(height: 16),
+                                            ] else ...[
+                                              Text(
+                                                _time,
+                                                style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 32,
+                                                ),
+                                              ),
+                                              SizedBox(height: 8),
+                                              Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.center,
+                                                children: [
+                                                  Container(
+                                                    width: 12,
+                                                    height: 12,
+                                                    decoration: BoxDecoration(
+                                                      color: Colors.green,
+                                                      shape: BoxShape.circle,
+                                                    ),
+                                                  ),
+                                                  SizedBox(width: 6),
+                                                  Container(
+                                                    width: 12,
+                                                    height: 12,
+                                                    decoration: BoxDecoration(
+                                                      color: Colors.yellow,
+                                                      shape: BoxShape.circle,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ],
+                                            SizedBox(height: 12),
+                                            ..._demoNotifications.map(
+                                              (n) => Padding(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      vertical: 2.0,
+                                                    ),
+                                                child: Text(
+                                                  n,
+                                                  style: TextStyle(
+                                                    color: Colors.white38,
+                                                    fontSize: 12,
+                                                  ),
+                                                  textAlign: TextAlign.center,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
                                         ),
                                       ),
                                     ),
