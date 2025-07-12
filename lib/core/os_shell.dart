@@ -3,6 +3,7 @@ import 'task_manager.dart';
 import 'notifications.dart';
 import 'settings.dart';
 import 'dart:async';
+import '../widgets/desktop_widget.dart';
 
 class OSShell extends StatefulWidget {
   @override
@@ -35,133 +36,115 @@ class _OSShellState extends State<OSShell> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.brown[100],
-      body: Column(
+      body: Stack(
         children: [
-          // Taskbar (reduce height)
-          Container(
-            height: 28, // reduced from 38
-            color: Colors.brown[700],
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 12),
-                  child: Text(
-                    'DeeperOS',
-                    style: TextStyle(
-                      color: Colors.yellow[700],
-                      fontWeight: FontWeight.bold,
-                      fontSize: 15,
+          // Desktop background image covers entire UI
+          Positioned.fill(
+            child: Image.asset('assets/desktop/image.png', fit: BoxFit.cover),
+          ),
+          Column(
+            children: [
+              // Taskbar
+              Container(
+                height: 28,
+                color: Colors.brown[700]!.withOpacity(0.85),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 12),
+                      child: Text(
+                        'DeeperOS',
+                        style: TextStyle(
+                          color: Colors.yellow[700],
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                        ),
+                      ),
                     ),
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 12),
+                      child: Text(
+                        _dateTime,
+                        style: TextStyle(
+                          color: Colors.green[200],
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // Main content
+              Expanded(child: DesktopWidget()),
+              // Dock
+              SizedBox(height: 16),
+              Center(
+                child: Container(
+                  width: MediaQuery.of(context).size.width * 0.6,
+                  height: 64,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Colors.brown[900]!, Colors.yellow[700]!],
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                    ),
+                    borderRadius: BorderRadius.circular(32),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.brown.withOpacity(0.4),
+                        blurRadius: 16,
+                        offset: Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      _DockIcon(
+                        icon: Icons.list,
+                        label: 'Tasks',
+                        color: Colors.yellow[100],
+                        onTap: () => _openPage(TaskManager()),
+                      ),
+                      _DockIcon(
+                        icon: Icons.notifications,
+                        label: 'Notify',
+                        color: Colors.green[200],
+                        onTap: () => _openPage(Notifications()),
+                      ),
+                      _DockIcon(
+                        icon: Icons.settings,
+                        label: 'Settings',
+                        color: Colors.brown[100],
+                        onTap: () => _openPage(Settings()),
+                      ),
+                      _DockIcon(
+                        icon: Icons.home,
+                        label: 'Home',
+                        color: Colors.yellow[300],
+                        onTap: () {}, // Placeholder
+                      ),
+                      _DockIcon(
+                        icon: Icons.memory,
+                        label: 'AI',
+                        color: Colors.green[300],
+                        onTap: () {}, // Placeholder
+                      ),
+                      _DockIcon(
+                        icon: Icons.sensors,
+                        label: 'Sensors',
+                        color: Colors.yellow[400],
+                        onTap: () {}, // Placeholder
+                      ),
+                    ],
                   ),
                 ),
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 12),
-                  child: Text(
-                    _dateTime,
-                    style: TextStyle(
-                      color: Colors.green[200],
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          // Main content
-          Expanded(
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'Welcome to the OS Shell',
-                    style: TextStyle(
-                      fontSize: 24,
-                      color: Colors.brown[800],
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  SizedBox(height: 32),
-                  ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      foregroundColor: Colors.brown[900],
-                      backgroundColor: Colors.yellow[700],
-                    ),
-                    icon: Icon(Icons.list),
-                    label: Text('Open Task Manager'),
-                    onPressed: () => _openPage(TaskManager()),
-                  ),
-                ],
               ),
-            ),
+              SizedBox(height: 16),
+            ],
           ),
-          // Dock (rounded, detached, gradient, shadow, more icons)
-          SizedBox(height: 16),
-          Center(
-            child: Container(
-              width: MediaQuery.of(context).size.width * 0.6,
-              height: 64,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Colors.brown[900]!, Colors.yellow[700]!],
-                  begin: Alignment.centerLeft,
-                  end: Alignment.centerRight,
-                ),
-                borderRadius: BorderRadius.circular(32),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.brown.withOpacity(0.4),
-                    blurRadius: 16,
-                    offset: Offset(0, 6),
-                  ),
-                ],
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  _DockIcon(
-                    icon: Icons.list,
-                    label: 'Tasks',
-                    color: Colors.yellow[100],
-                    onTap: () => _openPage(TaskManager()),
-                  ),
-                  _DockIcon(
-                    icon: Icons.notifications,
-                    label: 'Notify',
-                    color: Colors.green[200],
-                    onTap: () => _openPage(Notifications()),
-                  ),
-                  _DockIcon(
-                    icon: Icons.settings,
-                    label: 'Settings',
-                    color: Colors.brown[100],
-                    onTap: () => _openPage(Settings()),
-                  ),
-                  _DockIcon(
-                    icon: Icons.home,
-                    label: 'Home',
-                    color: Colors.yellow[300],
-                    onTap: () {}, // Placeholder
-                  ),
-                  _DockIcon(
-                    icon: Icons.memory,
-                    label: 'AI',
-                    color: Colors.green[300],
-                    onTap: () {}, // Placeholder
-                  ),
-                  _DockIcon(
-                    icon: Icons.sensors,
-                    label: 'Sensors',
-                    color: Colors.yellow[400],
-                    onTap: () {}, // Placeholder
-                  ),
-                ],
-              ),
-            ),
-          ),
-          SizedBox(height: 16),
         ],
       ),
     );

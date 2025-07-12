@@ -12,6 +12,7 @@ class DeeperOSApp extends StatelessWidget {
       title: 'DeeperOS Prototype UI',
       theme: ThemeData(primarySwatch: Colors.blue),
       home: OSShell(),
+      debugShowCheckedModeBanner: false,
     );
   }
 }
