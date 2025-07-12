@@ -10,26 +10,82 @@ class OSShell extends StatefulWidget {
   State<OSShell> createState() => _OSShellState();
 }
 
-class _OSShellState extends State<OSShell> {
-  String _dateTime = '';
+class _OSShellState extends State<OSShell> with SingleTickerProviderStateMixin {
+  String _time = '';
+  String _date = '';
+  bool _notchExpanded = false;
+  String _notification = '';
+  late AnimationController _notchController;
+  late Animation<double> _notchAnimation;
+
+  final List<String> _demoNotifications = [
+    "File system: Backup completed.",
+    "App: Music player started.",
+    "Agent: New message received.",
+    "System: Update available.",
+    "Sensors: Temperature normal.",
+  ];
 
   @override
   void initState() {
     super.initState();
     _updateTime();
     Timer.periodic(Duration(seconds: 1), (timer) => _updateTime());
+    _notchController = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: 350),
+    );
+    _notchAnimation = Tween<double>(begin: 0, end: 1).animate(CurvedAnimation(
+      parent: _notchController,
+      curve: Curves.easeInOut,
+    ));
+    _startDemoNotifications();
   }
 
   void _updateTime() {
     final now = DateTime.now();
     setState(() {
-      _dateTime =
-          "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}  ${now.day}/${now.month}/${now.year}";
+      _time = "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}";
+      _date = "${now.day}/${now.month}/${now.year}";
     });
   }
 
   void _openPage(Widget page) {
     Navigator.push(context, MaterialPageRoute(builder: (_) => page));
+  }
+
+  void _toggleNotch() {
+    setState(() {
+      _notchExpanded = !_notchExpanded;
+      if (_notchExpanded) {
+        _notchController.forward();
+      } else {
+        _notchController.reverse();
+      }
+    });
+  }
+
+  void _startDemoNotifications() async {
+    while (mounted) {
+      await Future.delayed(Duration(seconds: 7));
+      setState(() {
+        _notification = (_demoNotifications..shuffle()).first;
+        _notchExpanded = true;
+      });
+      _notchController.forward();
+      await Future.delayed(Duration(seconds: 3));
+      setState(() {
+        _notification = '';
+        _notchExpanded = false;
+      });
+      _notchController.reverse();
+    }
+  }
+
+  @override
+  void dispose() {
+    _notchController.dispose();
+    super.dispose();
   }
 
   @override
@@ -44,38 +100,166 @@ class _OSShellState extends State<OSShell> {
           ),
           Column(
             children: [
-              // Taskbar
-              Container(
-                height: 28,
-                color: Colors.brown[700]!.withOpacity(0.85),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 12),
-                      child: Text(
-                        'DeeperOS',
-                        style: TextStyle(
-                          color: Colors.yellow[700],
-                          fontWeight: FontWeight.bold,
-                          fontSize: 15,
+              // Transparent top bar with individually colored widgets
+              Padding(
+                padding: const EdgeInsets.only(top: 2.0, left: 2.0, right: 2.0, bottom: 6.0),
+                child: Container(
+                  height: 28,
+                  color: Colors.transparent,
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      // Left: Agent icon and DeeperOS text
+                      Container(
+                        margin: EdgeInsets.only(left: 6, right: 6),
+                        padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: Colors.green[300],
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.memory, color: Colors.white, size: 16),
+                            SizedBox(width: 6),
+                            Text(
+                              'DeeperOS',
+                              style: TextStyle(
+                                color: Colors.brown[900],
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                    ),
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 12),
-                      child: Text(
-                        _dateTime,
-                        style: TextStyle(
-                          color: Colors.green[200],
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
+                      // Spacer before notch
+                      Expanded(child: SizedBox()),
+                      // Center: Dynamic Island (Notch)
+                      GestureDetector(
+                        onTap: _toggleNotch,
+                        child: AnimatedBuilder(
+                          animation: _notchController,
+                          builder: (context, child) {
+                            double notchHeight = 24 + (_notchAnimation.value * 48);
+                            double notchWidth = 120 + (_notchAnimation.value * 80);
+                            return Container(
+                              width: notchWidth,
+                              height: notchHeight,
+                              decoration: BoxDecoration(
+                                color: Colors.black,
+                                borderRadius: BorderRadius.circular(16),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.3),
+                                    blurRadius: 8,
+                                    offset: Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: Stack(
+                                alignment: Alignment.center,
+                                children: [
+                                  // Green and yellow dot in center
+                                  Positioned(
+                                    top: notchHeight / 2 - 4,
+                                    left: notchWidth / 2 - 4,
+                                    child: Row(
+                                      children: [
+                                        Container(
+                                          width: 6,
+                                          height: 6,
+                                          decoration: BoxDecoration(
+                                            color: Colors.green,
+                                            shape: BoxShape.circle,
+                                          ),
+                                        ),
+                                        SizedBox(width: 2),
+                                        Container(
+                                          width: 6,
+                                          height: 6,
+                                          decoration: BoxDecoration(
+                                            color: Colors.yellow,
+                                            shape: BoxShape.circle,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  // Time and date on sides
+                                  Positioned(
+                                    left: 12,
+                                    top: notchHeight / 2 - 8,
+                                    child: Text(
+                                      _time,
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ),
+                                  Positioned(
+                                    right: 12,
+                                    top: notchHeight / 2 - 8,
+                                    child: Text(
+                                      _date,
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ),
+                                  // Notification text when expanded
+                                  if (_notchExpanded && _notification.isNotEmpty)
+                                    Positioned(
+                                      bottom: 8,
+                                      left: 0,
+                                      right: 0,
+                                      child: Center(
+                                        child: Text(
+                                          _notification,
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w400,
+                                          ),
+                                          textAlign: TextAlign.center,
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            );
+                          },
                         ),
                       ),
-                    ),
-                  ],
+                      // Spacer after notch
+                      Expanded(child: SizedBox()),
+                      // Right: Battery, Wifi, Speaker icons with backgrounds
+                      Container(
+                        margin: EdgeInsets.only(right: 6, left: 6),
+                        padding: EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: Colors.brown[300],
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.battery_full, color: Colors.green[900], size: 16),
+                            SizedBox(width: 6),
+                            Icon(Icons.wifi, color: Colors.yellow[700], size: 16),
+                            SizedBox(width: 6),
+                            Icon(Icons.volume_up, color: Colors.brown[900], size: 16),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
+              // Add tiny padding between topbar and everything else
+              SizedBox(height: 6),
               // Main content
               Expanded(child: DesktopWidget()),
               // Dock

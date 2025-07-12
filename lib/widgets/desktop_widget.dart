@@ -32,23 +32,24 @@ class DesktopWidget extends StatelessWidget {
                       offset: Offset(0, 0),
                       child: _DesktopIcon(icons[0]),
                     ),
-                    SizedBox(width: 24),
+                    SizedBox(width: 32), // increased spacing
                     Transform.translate(
                       offset: Offset(0, 8),
                       child: _DesktopIcon(icons[1]),
                     ),
-                    SizedBox(width: 24),
+                    SizedBox(width: 32),
                     Transform.translate(
                       offset: Offset(0, -6),
                       child: _DesktopIcon(icons[2]),
                     ),
                   ],
                 ),
+                SizedBox(height: 20), // space between rows
                 // Second row: 2 icons, not aligned with first row
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    SizedBox(width: 36),
+                    SizedBox(width: 48),
                     Transform.translate(
                       offset: Offset(0, 12),
                       child: _DesktopIcon(icons[3]),
@@ -60,6 +61,7 @@ class DesktopWidget extends StatelessWidget {
                     ),
                   ],
                 ),
+                SizedBox(height: 20),
                 // Third row: 1 icon, offset to the left
                 Row(
                   mainAxisSize: MainAxisSize.min,
