@@ -1,4 +1,5 @@
 import 'package:deeperos_prototype_ui/widgets/dock_home_screen.dart';
+import 'package:deeperos_prototype_ui/widgets/app_window_overlay.dart';
 import 'package:flutter/material.dart';
 import 'task_manager.dart';
 import 'notifications.dart';
@@ -30,6 +31,16 @@ class _OSShellState extends State<OSShell> with TickerProviderStateMixin {
     "System: Update available.",
     "Sensors: Temperature normal.",
   ];
+
+  Map<String, bool> _openWindows = {
+    'Tasks': false,
+    'Notify': false,
+    'Settings': false,
+    'Home': false,
+    'AI': false,
+    'Sensors': false,
+    'Files': false,
+  };
 
   @override
   void initState() {
@@ -124,6 +135,18 @@ class _OSShellState extends State<OSShell> with TickerProviderStateMixin {
       setState(() {
         _showDockHome = false;
       });
+    });
+  }
+
+  void _openWindow(String app) {
+    setState(() {
+      _openWindows[app] = true;
+    });
+  }
+
+  void _closeWindow(String app) {
+    setState(() {
+      _openWindows[app] = false;
     });
   }
 
@@ -466,6 +489,73 @@ class _OSShellState extends State<OSShell> with TickerProviderStateMixin {
                           );
                         },
                       ),
+                    // Window overlays for dock apps
+                    if (_openWindows['Tasks'] == true)
+                      AppWindowOverlay(
+                        appName: 'Tasks',
+                        icon: Icons.list,
+                        color: Colors.yellow[700]!,
+                        onClose: () => _closeWindow('Tasks'),
+                        child: TaskManager(),
+                        animationType: AppWindowAnimationType.squeeze,
+                      ),
+                    if (_openWindows['Notify'] == true)
+                      AppWindowOverlay(
+                        appName: 'Notify',
+                        icon: Icons.notifications,
+                        color: Colors.green[700]!,
+                        onClose: () => _closeWindow('Notify'),
+                        child: Notifications(),
+                        animationType: AppWindowAnimationType.fadeZoom,
+                      ),
+                    if (_openWindows['Settings'] == true)
+                      AppWindowOverlay(
+                        appName: 'Settings',
+                        icon: Icons.settings,
+                        color: Colors.brown[900]!,
+                        onClose: () => _closeWindow('Settings'),
+                        child: Settings(),
+                        animationType: AppWindowAnimationType.squeeze,
+                      ),
+                    if (_openWindows['Files'] == true)
+                      AppWindowOverlay(
+                        appName: 'Files',
+                        icon: Icons.folder,
+                        color: Colors.yellow[800]!,
+                        onClose: () => _closeWindow('Files'),
+                        child: Center(
+                          child: Text(
+                            'Files App',
+                            style: TextStyle(fontSize: 20),
+                          ),
+                        ),
+                        animationType: AppWindowAnimationType.zoom,
+                      ),
+                    if (_openWindows['AI'] == true)
+                      AppWindowOverlay(
+                        appName: 'AI',
+                        icon: Icons.memory,
+                        color: Colors.green[800]!,
+                        onClose: () => _closeWindow('AI'),
+                        child: Center(
+                          child: Text('AI App', style: TextStyle(fontSize: 20)),
+                        ),
+                        animationType: AppWindowAnimationType.fadeZoom,
+                      ),
+                    if (_openWindows['Sensors'] == true)
+                      AppWindowOverlay(
+                        appName: 'Sensors',
+                        icon: Icons.sensors,
+                        color: Colors.yellow[600]!,
+                        onClose: () => _closeWindow('Sensors'),
+                        child: Center(
+                          child: Text(
+                            'Sensors App',
+                            style: TextStyle(fontSize: 20),
+                          ),
+                        ),
+                        animationType: AppWindowAnimationType.squeeze,
+                      ),
                   ],
                 ),
               ),
@@ -480,19 +570,19 @@ class _OSShellState extends State<OSShell> with TickerProviderStateMixin {
                       icon: Icons.list,
                       label: 'Tasks',
                       color: Colors.yellow[700],
-                      onTap: () => _openPage(TaskManager()),
+                      onTap: () => _openWindow('Tasks'),
                     ),
                     _DockIcon(
                       icon: Icons.notifications,
                       label: 'Notify',
                       color: Colors.green[700],
-                      onTap: () => _openPage(Notifications()),
+                      onTap: () => _openWindow('Notify'),
                     ),
                     _DockIcon(
                       icon: Icons.settings,
                       label: 'Settings',
                       color: Colors.brown[900],
-                      onTap: () => _openPage(Settings()),
+                      onTap: () => _openWindow('Settings'),
                     ),
                     GestureDetector(
                       onTap: () {
@@ -525,19 +615,19 @@ class _OSShellState extends State<OSShell> with TickerProviderStateMixin {
                       icon: Icons.memory,
                       label: 'AI',
                       color: Colors.green[800],
-                      onTap: () {}, // Placeholder
+                      onTap: () => _openWindow('AI'),
                     ),
                     _DockIcon(
                       icon: Icons.sensors,
                       label: 'Sensors',
                       color: Colors.yellow[600],
-                      onTap: () {}, // Placeholder
+                      onTap: () => _openWindow('Sensors'),
                     ),
                     _DockIcon(
-                      icon: Icons.delete,
-                      label: 'Trash',
-                      color: Colors.red[400],
-                      onTap: () {}, // Placeholder
+                      icon: Icons.folder,
+                      label: 'Files',
+                      color: Colors.yellow[800],
+                      onTap: () => _openWindow('Files'),
                     ),
                   ],
                 ),
