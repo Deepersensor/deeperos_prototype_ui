@@ -35,17 +35,17 @@ class _OSShellState extends State<OSShell> with SingleTickerProviderStateMixin {
       vsync: this,
       duration: Duration(milliseconds: 350),
     );
-    _notchAnimation = Tween<double>(begin: 0, end: 1).animate(CurvedAnimation(
-      parent: _notchController,
-      curve: Curves.easeInOut,
-    ));
+    _notchAnimation = Tween<double>(begin: 0, end: 1).animate(
+      CurvedAnimation(parent: _notchController, curve: Curves.easeInOut),
+    );
     _startDemoNotifications();
   }
 
   void _updateTime() {
     final now = DateTime.now();
     setState(() {
-      _time = "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}";
+      _time =
+          "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}";
       _date = "${now.day}/${now.month}/${now.year}";
     });
   }
@@ -102,7 +102,12 @@ class _OSShellState extends State<OSShell> with SingleTickerProviderStateMixin {
             children: [
               // Transparent top bar with individually colored widgets
               Padding(
-                padding: const EdgeInsets.only(top: 2.0, left: 2.0, right: 2.0, bottom: 6.0),
+                padding: const EdgeInsets.only(
+                  top: 2.0,
+                  left: 2.0,
+                  right: 2.0,
+                  bottom: 6.0,
+                ),
                 child: Container(
                   height: 28,
                   color: Colors.transparent,
@@ -112,7 +117,10 @@ class _OSShellState extends State<OSShell> with SingleTickerProviderStateMixin {
                       // Left: Agent icon and DeeperOS text
                       Container(
                         margin: EdgeInsets.only(left: 6, right: 6),
-                        padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.green[300],
                           borderRadius: BorderRadius.circular(8),
@@ -140,8 +148,10 @@ class _OSShellState extends State<OSShell> with SingleTickerProviderStateMixin {
                         child: AnimatedBuilder(
                           animation: _notchController,
                           builder: (context, child) {
-                            double notchHeight = 24 + (_notchAnimation.value * 48);
-                            double notchWidth = 120 + (_notchAnimation.value * 80);
+                            double notchHeight =
+                                24 + (_notchAnimation.value * 48);
+                            double notchWidth =
+                                120 + (_notchAnimation.value * 80);
                             return Container(
                               width: notchWidth,
                               height: notchHeight,
@@ -211,7 +221,8 @@ class _OSShellState extends State<OSShell> with SingleTickerProviderStateMixin {
                                     ),
                                   ),
                                   // Notification text when expanded
-                                  if (_notchExpanded && _notification.isNotEmpty)
+                                  if (_notchExpanded &&
+                                      _notification.isNotEmpty)
                                     Positioned(
                                       bottom: 8,
                                       left: 0,
@@ -239,18 +250,33 @@ class _OSShellState extends State<OSShell> with SingleTickerProviderStateMixin {
                       // Right: Battery, Wifi, Speaker icons with backgrounds
                       Container(
                         margin: EdgeInsets.only(right: 6, left: 6),
-                        padding: EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 4,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.brown[300],
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Row(
                           children: [
-                            Icon(Icons.battery_full, color: Colors.green[900], size: 16),
+                            Icon(
+                              Icons.battery_full,
+                              color: Colors.green[900],
+                              size: 16,
+                            ),
                             SizedBox(width: 6),
-                            Icon(Icons.wifi, color: Colors.yellow[700], size: 16),
+                            Icon(
+                              Icons.wifi,
+                              color: Colors.yellow[700],
+                              size: 16,
+                            ),
                             SizedBox(width: 6),
-                            Icon(Icons.volume_up, color: Colors.brown[900], size: 16),
+                            Icon(
+                              Icons.volume_up,
+                              color: Colors.brown[900],
+                              size: 16,
+                            ),
                           ],
                         ),
                       ),
