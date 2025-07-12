@@ -1,3 +1,4 @@
+import 'package:deeperos_prototype_ui/widgets/dock_home_screen.dart';
 import 'package:flutter/material.dart';
 import 'task_manager.dart';
 import 'notifications.dart';
@@ -10,7 +11,7 @@ class OSShell extends StatefulWidget {
   State<OSShell> createState() => _OSShellState();
 }
 
-class _OSShellState extends State<OSShell> with SingleTickerProviderStateMixin {
+class _OSShellState extends State<OSShell> with TickerProviderStateMixin {
   String _time = '';
   String _date = '';
   bool _notchExpanded = false;
@@ -18,6 +19,9 @@ class _OSShellState extends State<OSShell> with SingleTickerProviderStateMixin {
   String _notification = '';
   late AnimationController _notchController;
   late Animation<double> _notchAnimation;
+  bool _showDockHome = false;
+  late AnimationController _dockHomeController;
+  late Animation<double> _dockHomeAnimation;
 
   final List<String> _demoNotifications = [
     "File system: Backup completed.",
@@ -38,6 +42,14 @@ class _OSShellState extends State<OSShell> with SingleTickerProviderStateMixin {
     );
     _notchAnimation = Tween<double>(begin: 0, end: 1).animate(
       CurvedAnimation(parent: _notchController, curve: Curves.easeInOut),
+    );
+    _dockHomeController = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: 700), // slower entrance animation
+    );
+    _dockHomeAnimation = CurvedAnimation(
+      parent: _dockHomeController,
+      curve: Curves.easeInOutCubic,
     );
     _startDemoNotifications();
   }
@@ -100,9 +112,25 @@ class _OSShellState extends State<OSShell> with SingleTickerProviderStateMixin {
     }
   }
 
+  void _openDockHome() {
+    setState(() {
+      _showDockHome = true;
+    });
+    _dockHomeController.forward();
+  }
+
+  void _closeDockHome() {
+    _dockHomeController.reverse().then((_) {
+      setState(() {
+        _showDockHome = false;
+      });
+    });
+  }
+
   @override
   void dispose() {
     _notchController.dispose();
+    _dockHomeController.dispose();
     super.dispose();
   }
 
@@ -215,53 +243,43 @@ class _OSShellState extends State<OSShell> with SingleTickerProviderStateMixin {
                                     alignment: Alignment.center,
                                     children: [
                                       // Always show time and dots in the notch
-                                      Positioned(
-                                        left: 0,
-                                        top: 0,
-                                        bottom: 0,
-                                        child: Align(
-                                          alignment: Alignment.centerLeft,
-                                          child: Text(
-                                            _time,
-                                            style: TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 13,
-                                              fontWeight: FontWeight.w500,
+                                      Align(
+                                        alignment: Alignment.centerLeft,
+                                        child: Text(
+                                          _time,
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ),
+                                      Align(
+                                        alignment: Alignment.centerRight,
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Container(
+                                              width: 8,
+                                              height: 8,
+                                              decoration: BoxDecoration(
+                                                color: Colors.green,
+                                                shape: BoxShape.circle,
+                                              ),
                                             ),
-                                          ),
+                                            SizedBox(width: 4),
+                                            Container(
+                                              width: 8,
+                                              height: 8,
+                                              decoration: BoxDecoration(
+                                                color: Colors.yellow,
+                                                shape: BoxShape.circle,
+                                              ),
+                                            ),
+                                          ],
                                         ),
                                       ),
-                                      Positioned(
-                                        right: 0,
-                                        top: 0,
-                                        bottom: 0,
-                                        child: Align(
-                                          alignment: Alignment.centerRight,
-                                          child: Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              Container(
-                                                width: 8,
-                                                height: 8,
-                                                decoration: BoxDecoration(
-                                                  color: Colors.green,
-                                                  shape: BoxShape.circle,
-                                                ),
-                                              ),
-                                              SizedBox(width: 4),
-                                              Container(
-                                                width: 8,
-                                                height: 8,
-                                                decoration: BoxDecoration(
-                                                  color: Colors.yellow,
-                                                  shape: BoxShape.circle,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                      // Notification or full expansion content in center
+                                      // Centered notification or full expansion content
                                       if (_notchFullyExpanded)
                                         Column(
                                           mainAxisAlignment:
@@ -413,72 +431,118 @@ class _OSShellState extends State<OSShell> with SingleTickerProviderStateMixin {
               ),
               SizedBox(height: 6),
               // Main content
-              Expanded(child: DesktopWidget()),
-              // Dock
-              SizedBox(height: 16),
-              Center(
-                child: Container(
-                  width: MediaQuery.of(context).size.width * 0.6,
-                  height: 64,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [Colors.brown[900]!, Colors.yellow[700]!],
-                      begin: Alignment.centerLeft,
-                      end: Alignment.centerRight,
+              Expanded(
+                child: Stack(
+                  children: [
+                    // Animate desktop icons up when dock home is shown
+                    AnimatedBuilder(
+                      animation: _dockHomeAnimation,
+                      builder: (context, child) {
+                        double translateY =
+                            -MediaQuery.of(context).size.height *
+                            0.5 *
+                            _dockHomeAnimation.value;
+                        double opacity = 1.0 - _dockHomeAnimation.value;
+                        return Transform.translate(
+                          offset: Offset(0, translateY),
+                          child: Opacity(
+                            opacity: opacity,
+                            child: DesktopWidget(),
+                          ),
+                        );
+                      },
                     ),
-                    borderRadius: BorderRadius.circular(32),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.brown.withOpacity(0.4),
-                        blurRadius: 16,
-                        offset: Offset(0, 6),
+                    // Animate dock home screen in from bottom
+                    if (_showDockHome)
+                      AnimatedBuilder(
+                        animation: _dockHomeAnimation,
+                        builder: (context, child) {
+                          double translateY =
+                              MediaQuery.of(context).size.height *
+                              (1 - _dockHomeAnimation.value);
+                          return Transform.translate(
+                            offset: Offset(0, translateY),
+                            child: DockHomeScreen(onClose: _closeDockHome),
+                          );
+                        },
                       ),
-                    ],
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      _DockIcon(
-                        icon: Icons.list,
-                        label: 'Tasks',
-                        color: Colors.yellow[100],
-                        onTap: () => _openPage(TaskManager()),
-                      ),
-                      _DockIcon(
-                        icon: Icons.notifications,
-                        label: 'Notify',
-                        color: Colors.green[200],
-                        onTap: () => _openPage(Notifications()),
-                      ),
-                      _DockIcon(
-                        icon: Icons.settings,
-                        label: 'Settings',
-                        color: Colors.brown[100],
-                        onTap: () => _openPage(Settings()),
-                      ),
-                      _DockIcon(
-                        icon: Icons.home,
-                        label: 'Home',
-                        color: Colors.yellow[300],
-                        onTap: () {}, // Placeholder
-                      ),
-                      _DockIcon(
-                        icon: Icons.memory,
-                        label: 'AI',
-                        color: Colors.green[300],
-                        onTap: () {}, // Placeholder
-                      ),
-                      _DockIcon(
-                        icon: Icons.sensors,
-                        label: 'Sensors',
-                        color: Colors.yellow[400],
-                        onTap: () {}, // Placeholder
-                      ),
-                    ],
-                  ),
+                  ],
                 ),
               ),
+              // Dock (icons only, no background)
               SizedBox(height: 16),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    _DockIcon(
+                      icon: Icons.list,
+                      label: 'Tasks',
+                      color: Colors.yellow[700],
+                      onTap: () => _openPage(TaskManager()),
+                    ),
+                    _DockIcon(
+                      icon: Icons.notifications,
+                      label: 'Notify',
+                      color: Colors.green[700],
+                      onTap: () => _openPage(Notifications()),
+                    ),
+                    _DockIcon(
+                      icon: Icons.settings,
+                      label: 'Settings',
+                      color: Colors.brown[900],
+                      onTap: () => _openPage(Settings()),
+                    ),
+                    GestureDetector(
+                      onTap: () {
+                        if (_showDockHome) {
+                          _closeDockHome();
+                        } else {
+                          _openDockHome();
+                        }
+                      },
+                      onVerticalDragEnd: (details) {
+                        if (details.primaryVelocity != null &&
+                            details.primaryVelocity! < 0) {
+                          _openDockHome();
+                        }
+                      },
+                      child: _DockIcon(
+                        icon: Icons.home,
+                        label: 'Home',
+                        color: Colors.yellow[800],
+                        onTap: () {
+                          if (_showDockHome) {
+                            _closeDockHome();
+                          } else {
+                            _openDockHome();
+                          }
+                        },
+                      ),
+                    ),
+                    _DockIcon(
+                      icon: Icons.memory,
+                      label: 'AI',
+                      color: Colors.green[800],
+                      onTap: () {}, // Placeholder
+                    ),
+                    _DockIcon(
+                      icon: Icons.sensors,
+                      label: 'Sensors',
+                      color: Colors.yellow[600],
+                      onTap: () {}, // Placeholder
+                    ),
+                    _DockIcon(
+                      icon: Icons.delete,
+                      label: 'Trash',
+                      color: Colors.red[400],
+                      onTap: () {}, // Placeholder
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(height: 8),
             ],
           ),
           // Overlay dropdown for notch
